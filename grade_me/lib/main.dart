@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const GPACalculatorApp());
@@ -29,6 +31,30 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   List<Semester> semesters = [];
 
+  @override
+  void initState() {
+    super.initState();
+    _loadSemesters();
+  }
+
+  Future<void> _loadSemesters() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? savedData = prefs.getString('semesters');
+    if (savedData != null) {
+      List<dynamic> decodedData = jsonDecode(savedData);
+      setState(() {
+        semesters = decodedData.map((e) => Semester.fromJson(e)).toList();
+      });
+    }
+  }
+
+  Future<void> _saveSemesters() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<Map<String, dynamic>> encodedData =
+        semesters.map((e) => e.toJson()).toList();
+    await prefs.setString('semesters', jsonEncode(encodedData));
+  }
+
   double calculateTotalGPA() {
     if (semesters.isEmpty) return 0.0;
     double totalPoints = 0;
@@ -43,6 +69,7 @@ class _HomePageState extends State<HomePage> {
   void addSemester() {
     setState(() {
       semesters.add(Semester());
+      _saveSemesters();
     });
   }
 
@@ -67,12 +94,14 @@ class _HomePageState extends State<HomePage> {
               itemBuilder: (context, index) {
                 return ListTile(
                   title: Text('Semester ${index + 1}'),
-                  trailing: Text('GPA: ${semesters[index].calculateSemesterGPA().toStringAsFixed(2)}'),
+                  trailing: Text(
+                      'GPA: ${semesters[index].calculateSemesterGPA().toStringAsFixed(2)}'),
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => SemesterPage(
                         semester: semesters[index],
+                        onSave: _saveSemesters,
                       ),
                     ),
                   ).then((_) => setState(() {})),
@@ -91,9 +120,12 @@ class _HomePageState extends State<HomePage> {
 }
 
 class Semester {
-  List<Course> courses = [];
+  List<Course> courses;
 
-  double get totalCredits => courses.fold(0, (sum, course) => sum + course.credits);
+  Semester({this.courses = const []}); // Default constructor
+
+  double get totalCredits =>
+      courses.fold(0, (sum, course) => sum + course.credits);
 
   double calculateSemesterGPA() {
     if (courses.isEmpty) return 0.0;
@@ -102,6 +134,19 @@ class Semester {
       totalPoints += course.gradePoints * course.credits;
     }
     return totalCredits > 0 ? totalPoints / totalCredits : 0.0;
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'courses': courses.map((e) => e.toJson()).toList(),
+    };
+  }
+
+  factory Semester.fromJson(Map<String, dynamic> json) {
+    return Semester(
+      courses:
+          (json['courses'] as List).map((e) => Course.fromJson(e)).toList(),
+    );
   }
 }
 
@@ -117,6 +162,22 @@ class Course {
   });
 
   double get gradePoints => gradeToPoints[grade] ?? 0.0;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'grade': grade,
+      'credits': credits,
+    };
+  }
+
+  factory Course.fromJson(Map<String, dynamic> json) {
+    return Course(
+      name: json['name'],
+      grade: json['grade'],
+      credits: json['credits'],
+    );
+  }
 }
 
 Map<String, double> gradeToPoints = {
@@ -132,8 +193,9 @@ Map<String, double> gradeToPoints = {
 
 class SemesterPage extends StatefulWidget {
   final Semester semester;
+  final VoidCallback onSave;
 
-  const SemesterPage({super.key, required this.semester});
+  const SemesterPage({super.key, required this.semester, required this.onSave});
 
   @override
   State<SemesterPage> createState() => _SemesterPageState();
@@ -143,6 +205,7 @@ class _SemesterPageState extends State<SemesterPage> {
   void addCourse() {
     setState(() {
       widget.semester.courses.add(Course());
+      widget.onSave();
     });
   }
 
@@ -158,7 +221,10 @@ class _SemesterPageState extends State<SemesterPage> {
           final course = widget.semester.courses[index];
           return ListTile(
             title: TextField(
-              onChanged: (value) => course.name = value,
+              onChanged: (value) {
+                course.name = value;
+                widget.onSave();
+              },
               decoration: InputDecoration(hintText: 'Course ${index + 1} Name'),
             ),
             subtitle: Row(
@@ -168,6 +234,7 @@ class _SemesterPageState extends State<SemesterPage> {
                   onChanged: (value) {
                     setState(() {
                       course.grade = value ?? 'A';
+                      widget.onSave();
                     });
                   },
                   items: gradeToPoints.keys.map((grade) {
@@ -181,7 +248,10 @@ class _SemesterPageState extends State<SemesterPage> {
                 Expanded(
                   child: TextField(
                     keyboardType: TextInputType.number,
-                    onChanged: (value) => course.credits = double.tryParse(value) ?? 3.0,
+                    onChanged: (value) {
+                      course.credits = double.tryParse(value) ?? 3.0;
+                      widget.onSave();
+                    },
                     decoration: const InputDecoration(hintText: 'Credits'),
                   ),
                 ),
