@@ -220,7 +220,7 @@ class _SemesterPageState extends State<SemesterPage> {
         itemBuilder: (context, index) {
           final course = widget.semester.courses[index];
           return ListTile(
-            title: TextField(
+            title: TextField( 
               onChanged: (value) {
                 course.name = value;
                 widget.onSave();
