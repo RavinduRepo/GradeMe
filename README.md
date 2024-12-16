@@ -7,7 +7,7 @@ A simple and efficient GPA Calculator app built with Flutter. This app allows us
 - **GPA Calculation**: Enter your course grades and the app calculates your GPA based on the grading scale.
 - **Store GPA Records**: Save GPA records for each semester along with details like course names and grades.
 - **GPA History**: View and manage all saved GPA records in the app's history section.
-- **Cross-Platform**: Built using Flutter, the app works seamlessly on Android, iOS, and Web.
+- **Cross-Platform**: Built using Flutter, the app works seamlessly on Android, iOS(not completed yet), and Web(not completed yet).
 - **SQLite Database**: Data is stored locally in SQLite, ensuring users' GPA records are safe even after the app is closed.
 
 ## Screenshots
@@ -19,7 +19,7 @@ A simple and efficient GPA Calculator app built with Flutter. This app allows us
 
 ### Prerequisites
 
-Before you can run this app, ensure you have the following:
+Before you can run this repo to develop, ensure you have the following:
 
 - **Flutter SDK**: Make sure Flutter is installed on your machine. You can follow the official installation guide here: [Flutter Installation Guide](https://flutter.dev/docs/get-started/install).
 - **Dart SDK**: Flutter includes the Dart SDK, so if you have Flutter installed, you already have Dart.
