@@ -1,10 +1,10 @@
-
 import 'course_model.dart';
 
 class Semester {
+  String?name;
   List<Course> courses;
 
-  Semester({this.courses = const []}); // Default constructor
+  Semester({required this.name, this.courses = const []}); // Default constructor
 
   double get totalCredits =>
       courses.fold(0, (sum, course) => sum + course.credits);
@@ -20,14 +20,15 @@ class Semester {
 
   Map<String, dynamic> toJson() {
     return {
+      'name': name,
       'courses': courses.map((e) => e.toJson()).toList(),
     };
   }
 
   factory Semester.fromJson(Map<String, dynamic> json) {
     return Semester(
-      courses:
-          (json['courses'] as List).map((e) => Course.fromJson(e)).toList(),
+      name: json['name'],
+      courses: (json['courses'] as List).map((e) => Course.fromJson(e)).toList(),
     );
   }
 }

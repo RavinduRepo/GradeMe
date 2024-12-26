@@ -16,7 +16,9 @@ class SemesterPage extends StatefulWidget {
 class _SemesterPageState extends State<SemesterPage> {
   void addCourse() {
     setState(() {
-      widget.semester.courses.add(Course());
+      final updatedCourses = List<Course>.from(widget.semester.courses);
+      updatedCourses.add(Course());
+      widget.semester.courses = updatedCourses;
       widget.onSave();
     });
   }

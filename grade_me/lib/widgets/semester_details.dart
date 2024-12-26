@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:grade_me/main.dart';
 import 'package:grade_me/models/semester_models.dart';
 
-class SemesterDetails extends StatelessWidget {
+class SemesterDetails extends StatefulWidget {
   final Semester semester;
   final VoidCallback onSave;
 
@@ -10,20 +10,26 @@ class SemesterDetails extends StatelessWidget {
       {super.key, required this.semester, required this.onSave});
 
   @override
+  _SemesterDetailsState createState() => _SemesterDetailsState();
+}
+
+class _SemesterDetailsState extends State<SemesterDetails> {
+  @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      itemCount: semester.courses.length,
+      itemCount: widget.semester.courses.length,
       itemBuilder: (context, index) {
-        final course = semester.courses[index];
+        final course = widget.semester.courses[index];
         return ListTile(
           trailing: IconButton(
             icon: const Icon(Icons.delete),
             onPressed: () {
-              semester.courses.removeAt(index);
-              onSave();
+              setState(() {
+                widget.semester.courses.removeAt(index);
+                widget.onSave();
+              });
             },
           ),
-          // course name
           title: TextField(
             controller: TextEditingController.fromValue(
               TextEditingValue(
@@ -33,7 +39,7 @@ class SemesterDetails extends StatelessWidget {
             ),
             onChanged: (value) {
               course.name = value;
-              onSave();
+              widget.onSave();
             },
             decoration: InputDecoration(hintText: 'Course ${index + 1} Name'),
           ),
@@ -42,8 +48,10 @@ class SemesterDetails extends StatelessWidget {
               DropdownButton<String>(
                 value: course.grade,
                 onChanged: (value) {
-                  course.grade = value ?? 'A';
-                  onSave();
+                  setState(() {
+                    course.grade = value ?? 'A';
+                    widget.onSave();
+                  });
                 },
                 items: gradeToPoints.keys.map((grade) {
                   return DropdownMenuItem(
@@ -54,14 +62,15 @@ class SemesterDetails extends StatelessWidget {
               ),
               const SizedBox(width: 16),
               Expanded(
-                // course credits
                 child: TextField(
                   controller:
                       TextEditingController(text: course.credits.toString()),
                   keyboardType: TextInputType.number,
                   onChanged: (value) {
-                    course.credits = double.tryParse(value) ?? 3.0;
-                    onSave();
+                    setState(() {
+                      course.credits = double.tryParse(value) ?? 3.0;
+                      widget.onSave();
+                    });
                   },
                   decoration: const InputDecoration(hintText: 'Credits'),
                 ),
